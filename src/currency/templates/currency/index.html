@@ -10,14 +10,29 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-trendline@3.2.12/dist/chartjs-plugin-trendline.min.js"></script>
+
   </head>
   <body class="bg-dark text-white">
     <div class="container-fluid">
+      <div class="row">
+        <div class="col">
+          <h1 class="text-white">Currency Dashboard</h1>
+          <p class="text-white">Showing data for the last {{ page_label }}</p>
+          <a class="btn {% if page_label == "Week" %} btn-primary{% else %} btn-outline-primary{% endif %}" href="{% url 'home' days_range=7 currencies=currencies %}">Last Week</a>
+          <a class="btn {% if page_label == "Month" %} btn-primary{% else %} btn-outline-primary{% endif %}" href="{% url 'home' days_range=30 currencies=currencies %}">Last Month</a>
+          <a class="btn {% if page_label == "Quarter" %} btn-primary{% else %} btn-outline-primary{% endif %}" href="{% url 'home' days_range=90 currencies=currencies %}">Last Quarter</a>
+          <a class="btn {% if page_label == "Year" %} btn-primary{% else %} btn-outline-primary{% endif %}" href="{% url 'home' days_range=365 currencies=currencies %}">Last Year</a>
+        </div>
+      </div>
+
+
       <div class="row justify-content-center">
+        {% for currency, rates in data.items %}
         <div class="col-md-10 col-lg-6">
-          <div style="position: relative; height: 60vh">
-            <canvas id="chart"></canvas>
+            <canvas id="chart-{{ currency }}"></canvas>
           </div>
+          {% endfor %}
         </div>
       </div>
     </div>
@@ -26,24 +41,29 @@
 
       Chart.defaults.color = '#fff';
 
-      var ctx = document.getElementById("chart");
-      new Chart(ctx, {
-          type: 'line',
-          data: {
-              labels: {{ days_labels|safe }},
-              datasets: [{
-                  label: "USD",
-                  data: {{ data|safe }},
-                  fill: true,
-                  backgroundColor: 'rgba(183, 201, 204, 0.83)',
-                  borderColor: 'rgb(255, 128, 128)'
-              }]
-          },
-          options: {
-              responsive: true,
-              maintainAspectRatio: false
-          }
-      });
+      {% for currency, rates in data.items %}
+        var ctx = document.getElementById("chart-{{ currency }}");
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ days_labels|safe }},
+                datasets: [{
+                    label: '{{ currency }}',
+                    data: {{ rates|safe }},
+                    fill: true,
+                    borderColor: 'rgb(45, 164, 215)',
+                    trendlineLinear: {
+                        style: "rgb(255, 99, 132)",
+                        lineStyle: "dashed",
+                        width: 2
+                    }
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+      {% endfor %}
     </script>
   </body>
 </html>
